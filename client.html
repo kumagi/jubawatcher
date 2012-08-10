@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="smoothie.js"></script>
+    <script type="text/javascript">
+      var free_memory = new TimeSeries();
+      var loadavg = new TimeSeries();
+      var total_memory = new TimeSeries();
+      var target_url = "http://localhost:1337"
+
+      setInterval(function() {
+        $.getJSON(target_url, null, function(data,result){
+          free_memory.append(new Date().getTime(), data.free_memory);
+          loadavg.append(new Date().getTime(), data.loadavg);
+          total_memory.append(new Date().getTime(), data.total_memory);
+        });
+      }, 500);
+      function createTimeline() {
+        var memory_chart = new SmoothieChart({
+          minValue: 0, maxValue: 8000000000,
+          grid : {
+            strokeStyle:'rgb(200, 200, 200)',
+            fillStyle:'rgb(255, 255, 255)',
+            lineWidth: 1,
+            millisPerLine: 1000,
+            verticalSections: 4,
+          },
+          labels: { fillStyle:'rgb(60, 0, 0)' }});
+
+        memory_chart.addTimeSeries(free_memory, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.1)', lineWidth: 1});
+        memory_chart.addTimeSeries(total_memory, { strokeStyle:'rgb(0, 0, 255)', fillStyle:'rgba(0, 0, 255,  0.0)', lineWidth:2 });
+        memory_chart.streamTo(document.getElementById("memory_chart"), 500);
+
+        var load_chart = new SmoothieChart({
+          minValue: 0, maxValue: 10,
+          grid : {
+            strokeStyle:'rgb(200, 200, 200)',
+            fillStyle:'rgb(255, 255, 255)',
+            lineWidth: 1,
+            millisPerLine: 1000,
+            verticalSections: 4,
+          },
+          labels: { fillStyle:'rgb(60, 0, 0)' }});
+        load_chart.addTimeSeries(loadavg, { strokeStyle:'rgb(255, 255, 0)', fillStyle:'rgba(255, 255, 0, 0.1)', lineWidth:2 });
+        load_chart.streamTo(document.getElementById("load_chart"), 500);
+      }
+    </script>
+  </head>
+  <body onload="createTimeline()" style="background-color:#ffffff">
+    <!-- <img src="title.png"><br> -->
+    <canvas id="memory_chart" width="640" height="100"></canvas><br>
+    Memory Monitor<br>
+    <canvas id="load_chart" width="640" height="100"></canvas><br>
+    Load Average Monitor
+  </body>
+</html>
